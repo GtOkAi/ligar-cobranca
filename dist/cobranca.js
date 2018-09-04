@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = gemidao;
+exports.default = cobranca;
 
 var _bluebird = require('bluebird');
 
@@ -24,10 +24,10 @@ var route = function route(path) {
     return 'https://api.totalvoice.com.br' + path;
 };
 
-var gemidaoInText = 'OOOWH AHHHWN WOOOO AAAAHN WAAAAA AAAAAAHN ANN WAAA!\n' + 'Voce caiu no gemidao do zap';
+var cobrancaInText = 'PODERÁ SER PROTOCOLADO A PETIÇÃO EXTRA JUDICIAL REFERENTE AO NÃO CUMPRIMENTO DO SEU COMPROMISSO.';
 
 var sms = function sms(to, token) {
-    return request.post(route('/sms')).set('Access-Token', token).set('Accept', 'application/json').send({ numero_destino: to, mensagem: gemidaoInText });
+    return request.post(route('/sms')).set('Access-Token', token).set('Accept', 'application/json').send({ numero_destino: to, mensagem: cobrancaInText });
 };
 
 var call = function call(from, to, token) {
@@ -43,7 +43,7 @@ var call = function call(from, to, token) {
     });
 };
 
-function gemidao(args) {
+function cobranca(args) {
     if (!/^[a-f0-9]{32}$/.test(args.token)) {
         return (0, _bluebird.reject)(new Error('Token inválido. Obtenha um em https://totalvoice.com.br'));
     }

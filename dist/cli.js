@@ -9,9 +9,9 @@ var _safe = require('colors/safe');
 
 var _ramda = require('ramda');
 
-var _gemidao = require('./gemidao');
+var _cobranca = require('./cobranca');
 
-var _gemidao2 = _interopRequireDefault(_gemidao);
+var _cobranca2 = _interopRequireDefault(_cobranca);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -23,12 +23,12 @@ var emitError = function emitError(message) {
 };
 
 function cli(args) {
-    (0, _gemidao2.default)(args).then(function () {
+    (0, _cobranca2.default)(args).then(function () {
         emitSuccess(args.sms ? 'sms enviado!' : 'chamada efetuada!');
     }).catch((0, _ramda.pipe)((0, _ramda.prop)('message'), emitError));
 }
 
-cli(_yargs2.default.usage('Uso: gemidao-do-zap --de=<de> --para=<para>').option('token', {
+cli(_yargs2.default.usage('Uso: ligar-cobranca --de=<de> --para=<para>').option('token', {
     describe: 'Token do TotalVoice',
     type: 'string'
 }).option('de', {

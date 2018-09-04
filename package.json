@@ -81,7 +81,7 @@
   "optionalDependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GtOkAi/ligar-cobranca"
+    "url": "git+https://github.com/GtOkAi/ligar-cobranca.git"
   },
   "scripts": {
     "build": "babel ./src -d ./dist",
