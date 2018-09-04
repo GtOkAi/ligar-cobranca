@@ -22,8 +22,8 @@
     "tmp": "tmp/ligar-cobranca-0.1.2.tgz_1502150573772_0.6703111487440765"
   },
   "_npmUser": {
-    "name": "haskellcamargo",
-    "email": "marcelocamargo@linuxmail.org"
+    "name": "gustavoporto",
+    "email": "fgustavoporto@gmail.com"
   },
   "_npmVersion": "3.5.0",
   "_phantomChildren": {},
@@ -44,7 +44,7 @@
   "_shrinkwrap": null,
   "_spec": "ligar-cobranca",
   "_where": "C:\\Users\\gtoka",
-  "author": "Marcelo Camargo <marcelocamargo@linuxmail.org>",
+  "author": "Gustavo Porto <fgustavoporto@gmail.com>",
   "bin": {
     "ligar-cobranca": "./dist/cli.js"
   },
@@ -71,17 +71,17 @@
     "shasum": "ba742dc372bcb27493200076879be5db2e3cd45b",
     "tarball": "https://registry.npmjs.org/ligar-cobranca/-/ligar-cobranca-0.1.2.tgz"
   },
-  "homepage": "https://8balls.com.br",
+  "homepage": "https://github.com/GtOkAi/ligar-cobranca",
   "license": "MIT",
   "main": "dist/index.js",
   "maintainers": [
-    "haskellcamargo <marcelocamargo@linuxmail.org>"
+    "Gustavo Porto <fgustavoporto@gmail.com>"
   ],
   "name": "ligar-cobranca",
   "optionalDependencies": {},
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/GtOkAi/ligar-cobranca"
   },
   "scripts": {
     "build": "babel ./src -d ./dist",
