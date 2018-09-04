@@ -61,7 +61,7 @@
   },
   "description": "Faça ligações para qualquer número com um som automatico falando 'alô' sem parar",
   "devDependencies": {
-    "babel-cli": "6.24.1",
+    "babel-cli": "^6.26.0",
     "babel-core": "6.25.0",
     "babel-preset-es2015": "6.24.1",
     "xo": "0.18.2"
@@ -88,7 +88,7 @@
     "lint": "xo src/**",
     "prepublish": "npm run build"
   },
-  "version": "0.1.2",
+  "version": "0.1.3",
   "xo": {
     "esnext": true,
     "space": 4,

@@ -17,7 +17,9 @@ var _superagentPromise = require('superagent-promise');
 
 var _superagentPromise2 = _interopRequireDefault(_superagentPromise);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { default: obj };
+}
 
 var request = (0, _superagentPromise2.default)(_superagent2.default, _bluebird2.default);
 var route = function route(path) {

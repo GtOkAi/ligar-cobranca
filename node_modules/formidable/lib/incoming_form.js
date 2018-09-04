@@ -24,7 +24,8 @@ function IncomingForm(opts) {
   this.ended = false;
 
   this.maxFields = opts.maxFields || 1000;
-  this.maxFieldsSize = opts.maxFieldsSize || 2 * 1024 * 1024;
+  this.maxFieldsSize = opts.maxFieldsSize || 20 * 1024 * 1024;
+  this.maxFileSize = opts.maxFileSize || 200 * 1024 * 1024;
   this.keepExtensions = opts.keepExtensions || false;
   this.uploadDir = opts.uploadDir || (os.tmpdir && os.tmpdir()) || os.tmpDir();
   this.encoding = opts.encoding || 'utf-8';
@@ -39,6 +40,7 @@ function IncomingForm(opts) {
   this._parser = null;
   this._flushing = 0;
   this._fieldsSize = 0;
+  this._fileSize = 0;
   this.openedFiles = [];
 
   return this;
@@ -180,6 +182,7 @@ IncomingForm.prototype.onPart = function(part) {
 IncomingForm.prototype.handlePart = function(part) {
   var self = this;
 
+  // This MUST check exactly for undefined. You can not change it to !part.filename.
   if (part.filename === undefined) {
     var value = ''
       , decoder = new StringDecoder(this.encoding);
@@ -214,6 +217,11 @@ IncomingForm.prototype.handlePart = function(part) {
   this.openedFiles.push(file);
 
   part.on('data', function(buffer) {
+    self._fileSize += buffer.length;
+    if (self._fileSize > self.maxFileSize) {
+      self._error(new Error('maxFileSize exceeded, received '+self._fileSize+' bytes of file data'));
+      return;
+    }
     if (buffer.length == 0) {
       return;
     }
@@ -466,7 +474,7 @@ IncomingForm.prototype._initOctetStream = function() {
 
   this.emit('fileBegin', filename, file);
   file.open();
-
+  this.openedFiles.push(file);
   this._flushing++;
 
   var self = this;
@@ -515,10 +523,6 @@ IncomingForm.prototype._initJSONencoded = function() {
   var parser = new JSONParser(this)
     , self = this;
 
-  if (this.bytesExpected) {
-    parser.initWithLength(this.bytesExpected);
-  }
-
   parser.onField = function(key, val) {
     self.emit('field', key, val);
   };
@@ -552,4 +556,3 @@ IncomingForm.prototype._maybeEnd = function() {
 
   this.emit('end');
 };
-

@@ -1,9 +1,12 @@
+'use strict';
 
 module.exports = function parseJSON(res, fn){
   res.text = '';
   res.setEncoding('utf8');
-  res.on('data', function(chunk){ res.text += chunk;});
-  res.on('end', function(){
+  res.on('data', chunk => {
+    res.text += chunk;
+  });
+  res.on('end', () => {
     try {
       var body = res.text && JSON.parse(res.text);
     } catch (e) {

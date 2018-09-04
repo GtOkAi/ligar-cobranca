@@ -67,11 +67,22 @@
         if (this instanceof Cookie) {
             var parts = str.split(";").filter(function (value) {
                     return !!value;
-                }),
-                pair = parts[0].match(/([^=]+)=([\s\S]*)/),
-                key = pair[1],
-                value = pair[2],
-                i;
+                });
+            var i;
+
+            var pair = parts[0].match(/([^=]+)=([\s\S]*)/);
+            if (!pair) {
+                console.warn("Invalid cookie header encountered. Header: '"+str+"'");
+                return;
+            }
+
+            var key = pair[1];
+            var value = pair[2];
+            if ( typeof key !== 'string' || key.length === 0 || typeof value !== 'string' ) {
+                console.warn("Unable to extract values from cookie header. Cookie: '"+str+"'");
+                return;
+            }
+
             this.name = key;
             this.value = value;
 
