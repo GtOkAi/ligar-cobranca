@@ -40,4 +40,7 @@ cli(_yargs2.default.usage('Uso: ligar-cobranca --de=<de> --para=<para>').option(
 }).option('sms', {
     describe: 'Se definido, será enviado um SMS ao invés de uma chamada',
     type: 'boolean'
+}).option('tipo', {
+    describe: 'Default - Alô | 0 - Aleatório ou 1~5, as letras estão no https://github.com/GtOkAi/ligar-cobranca',
+    type: 'integer'
 }).demandOption(['para', 'token']).locale('pt_BR').strict().help().version().argv);

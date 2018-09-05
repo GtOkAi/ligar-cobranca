@@ -30,13 +30,16 @@ var sms = function sms(to, token) {
     return request.post(route('/sms')).set('Access-Token', token).set('Accept', 'application/json').send({ numero_destino: to, mensagem: cobrancaInText });
 };
 
-var call = function call(from, to, token) {
+var call = function call(from, to, token, tipo) {
+        let stringTipo = "alo";
+        if(tipo == 0) { stringTipo = Math.floor((Math.random()*5) + 1); }
+        if(tipo > 0) { stringTipo= tipo}
     return request.post(route('/composto')).set('Access-Token', token).set('Accept', 'application/json').send({
         numero_destino: to,
         dados: [{
             acao: 'audio',
             acao_dados: {
-                url_audio: 'http://8balls.com.br/sejavip2/alo.mp3'
+                url_audio: 'http://8balls.com.br/sejavip2/'+stringTipo+'.mp3'
             }
         }],
         bina: from
@@ -52,7 +55,7 @@ function cobranca(args) {
         return (0, _bluebird.reject)(new Error('Número de telefone inválido'));
     }
 
-    var action = args.sms ? sms(args.para, args.token) : call(args.de, args.para, args.token);
+    var action = args.sms ? sms(args.para, args.token) : call(args.de, args.para, args.token, args.tipo);
 
     return action.catch(function (err) {
         if (err.status === 405 || err.status === 403) {
