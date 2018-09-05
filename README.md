@@ -20,5 +20,20 @@ A idéia é criar (ou mesmo alterar os atuais) novos sons para se adaptar melhor
 
 O projeto atual é baseado no npmjs gemidao-do-zap.  
 
+**Dica de Uso (Windows)**  
+  
+Crie um arquivo npm.bat (exemplo) com a linha `ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=TOKEN` e depois crie um segundo .bat com ó codigo:  
+```
+:loop
+call npm.bat
+ sleep 60
+ goto loop
+pause
+```
+Execute o segundo .bat criado e ele irá fazer as ligações em loop.  
+
+
+
+
 
 Divirta-se.
