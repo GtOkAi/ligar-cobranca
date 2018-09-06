@@ -45,6 +45,22 @@ pause
 ```
 Execute o segundo .bat criado e ele irá fazer as ligações em loop.  
 
----
+
+### Dica de Uso (Unix likes)
+
+Crie um arquivo `vinganca.sh` com o código:
+```shell
+#!/usr/bin/bash
+# heuehuuee, o melhor projeto do mundo esse <3
+
+while true
+do
+        # Acrescente aqui seus dados
+        ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=TOKEN
+        sleep 60
+done
+```
+Após dê permissão, dentro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh` <3
+
 
 Divirta-se.
