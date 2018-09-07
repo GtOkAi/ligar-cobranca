@@ -60,7 +60,7 @@ do
         sleep 60
 done
 ```
-Após dê permissão, dentro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh` <3
+Após dê permissão, denaro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh` <3
 
 
 Divirta-se.
