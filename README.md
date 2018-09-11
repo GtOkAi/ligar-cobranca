@@ -1,9 +1,6 @@
 # Ligar cobrança
 
 Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer ligação com a Total Voice.
-
-> Baseado no [gemidao-do-zap](https://github.com/haskellcamargo/gemidao-do-zap).  
-
 ## Para usar:
 
 1. Se cadastre no http://totalvoice.com.br (os créditos para ligar não são de graça, mas são baratos);
@@ -64,3 +61,6 @@ Após dê permissão, dentro do diretório rode `chmod +x vinganca.sh && ./vinga
 
 
 Divirta-se.
+
+> Baseado nesse [pacote](https://github.com/haskellcamargo/gemidao-do-zap).  
+
