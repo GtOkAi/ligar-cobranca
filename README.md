@@ -1,5 +1,5 @@
 # Ligar cobrança
-
+Você poderá baixar a versão em APP já compilada no Google Play (Android): https://play.google.com/store/apps/details?id=io.ligarcobranca.gtokai (versão iOS está em validação).  
 Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer ligação com a Total Voice.
 ## Para usar:
 
