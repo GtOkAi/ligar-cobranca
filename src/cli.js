@@ -41,6 +41,15 @@ cli(_yargs2.default.usage('Uso: ligar-cobranca --de=<de> --para=<para>').option(
     describe: 'Se definido, será enviado um SMS ao invés de uma chamada',
     type: 'boolean'
 }).option('tipo', {
-    describe: 'Default - Alô | 0 - Aleatório ou 1~5, as letras estão no https://github.com/GtOkAi/ligar-cobranca',
+    describe: 'Default - Alô | 0 - Aleatório ou 1~6, as letras estão no https://github.com/GtOkAi/ligar-cobranca',
     type: 'integer'
+}).option('texto', {
+    describe: 'Texto para ser convertido em voz',
+    type: 'string'
+}).option('voz', {
+    describe: 'Default - br-Ricardo | 1 - br-Vitoria',
+    type: 'integer'
+}).option('mp3', {
+    describe: 'Definir um mp3 alternativo a partir de uma URL',
+    type: 'string'
 }).demandOption(['para', 'token']).locale('pt_BR').strict().help().version().argv);

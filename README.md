@@ -16,6 +16,10 @@ Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer liga
 | `--de`    | :white_check_mark: | Quem está se defendendo.                                                                     |
 | `--para`  | :white_check_mark: | Número da empresa de cobrança.                                                               |
 | `--tipo`  |                    | Você poderá usar o argumento `--tipo` para mudar a fala padrão "Alô? Alô? Alô? Alô? [...]".  |
+| `--mp3`   |                    | Você poderá usar o argumento `--mp3` para executar um arquivo de som a partir de uma url".   |
+| `--texto` |                    | Use o argumento `--texto` com "", para definir um novo texto a ser convertido em voz.        |
+| `--voz`   |                    | Combinado com o argumento `--texto` use para trocar a voz. 0 = Masculina, 1 = Feminina       |
+
 
 #### `--tipo`
 
@@ -26,9 +30,25 @@ Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer liga
 - `3`: "Você irá receber ligações infinitamente, até que pare de ligar no meu número"  
 - `4`: "Esse é meu jeito de viver, ninguém nunca foi igual, a minha vida é fazer, o bem vencer o mal, pelo mundo viajarei tentando encontrar, o pokemon e com o seu poder tudo transformar"  
 - `5`: "Olá, tudo bem? Parece que o jogo virou, não é mesmo? Vou te ligar repetidamente, igual vocês fazem comigo"  
-
+  
 A idéia é criar (ou mesmo alterar os atuais) novos sons para se adaptar melhor em outras situações.  
-
+  
+#### `--texto` e `--voz`  
+  
+Caso nenhuma das falas padrões do argumento `--tipo` tenha te agradado, você poderá usar o argumento `--texto` para definir o que será falado, junto com o argumento `--voz`.  
+- `0`(Default): Masculina (br-Ricardo)  
+- `1`: Feminina (br-Vitoria)  
+Exemplo de uso:  
+  
+`ligar-cobranca --de=1199999999 --para=1199999999 --token=134df8d2a0ab3df07c42f088c9a2e5e1 --texto="Olá, essa é uma mensagem de teste usando a voz da Vitoria" --voz=1`  
+  
+#### `--mp3`  
+  
+Para executar um arquivo mp3, use o argumento `--mp3` com uma url direta para o arquivo de som.  
+Exemplo de uso:  
+  
+`ligar-cobranca --de=1199999999 --para=1199999999 --token=134df8d2a0ab3df07c42f088c9a2e5e1 --mp3=http://8balls.com.br/sejavip2/alo.mp3`  
+  
 ### Dica de Uso (Windows)  
   
 Crie um arquivo `npm.bat` (exemplo) com a linha `ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=TOKEN` e depois crie um segundo `.bat` com o código:

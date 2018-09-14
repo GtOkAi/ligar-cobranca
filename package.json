@@ -88,7 +88,7 @@
     "lint": "xo src/**",
     "prepublish": "npm run build"
   },
-  "version": "0.1.3",
+  "version": "0.2.0",
   "xo": {
     "esnext": true,
     "space": 4,
