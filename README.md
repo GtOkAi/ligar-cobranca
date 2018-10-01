@@ -1,11 +1,17 @@
 # Ligar cobrança
-Você poderá baixar a versão em APP já compilada no Google Play (Android): https://play.google.com/store/apps/details?id=io.ligarcobranca.gtokai (versão iOS está em validação).  
-Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer ligação com a Total Voice.
+
+**Aplicativo disponível para:**
+
+- Android: [Google Play](https://play.google.com/store/apps/details?id=io.ligarcobranca.gtokai)
+- iOS: *versão iOS está em validação*  
+
+Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer ligação com a [Total Voice](http://totalvoice.com.br).
+
 ## Para usar:
 
-1. Se cadastre no http://totalvoice.com.br (os créditos para ligar não são de graça, mas são baratos);
-2. Pegue seu token;
-3. Instale o pacote usando: `npm install ligar-cobranca -g`;
+1. Se cadastre no http://totalvoice.com.br (os créditos para ligar não são de graça, mas são baratos).
+2. Pegue seu token.
+3. Instale o pacote usando: `npm install ligar-cobranca -g`.
 4. use o comando: `ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=<TOKEN> [--tipo=<TIPO>]` (tipo opcional).
 
 ### Parâmetros
@@ -35,9 +41,11 @@ A idéia é criar (ou mesmo alterar os atuais) novos sons para se adaptar melhor
   
 #### `--texto` e `--voz`  
   
-Caso nenhuma das falas padrões do argumento `--tipo` tenha te agradado, você poderá usar o argumento `--texto` para definir o que será falado, junto com o argumento `--voz`.  
-- `0`(Default): Masculina (br-Ricardo)  
-- `1`: Feminina (br-Vitoria)  
+Caso nenhuma das falas padrões do argumento `--tipo` tenha te agradado, você poderá usar o argumento `--texto` para definir o que será falado, junto com o argumento `--voz`.
+
+- `0` (Default): Masculina (br-Ricardo)  
+- `1`: Feminina (br-Vitoria)
+
 Exemplo de uso:  
   
 `ligar-cobranca --de=1199999999 --para=1199999999 --token=134df8d2a0ab3df07c42f088c9a2e5e1 --texto="Olá, essa é uma mensagem de teste usando a voz da Vitoria" --voz=1`  
@@ -60,12 +68,14 @@ call npm.bat
  goto loop
 pause
 ```
+
 Execute o segundo .bat criado e ele irá fazer as ligações em loop.  
 
 
 ### Dica de Uso (Unix likes)
 
 Crie um arquivo `vinganca.sh` com o código:
+
 ```shell
 #!/usr/bin/bash
 # heuehuuee, o melhor projeto do mundo esse <3
@@ -77,10 +87,11 @@ do
         sleep 60
 done
 ```
-Após dê permissão, dentro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh` <3
+
+Após isto dê permissão e dentro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh`. <3
 
 
 Divirta-se.
 
-> Baseado nesse [pacote](https://github.com/haskellcamargo/gemidao-do-zap).  
+> Baseado nesse [projeto](https://github.com/haskellcamargo/gemidao-do-zap).  
 
