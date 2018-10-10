@@ -21,10 +21,10 @@ Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer liga
 | `--token` | :white_check_mark: | Seu token de acesso do TotalVoice                                                            |
 | `--de`    | :white_check_mark: | Quem está se defendendo.                                                                     |
 | `--para`  | :white_check_mark: | Número da empresa de cobrança.                                                               |
-| `--tipo`  |                    | Você poderá usar o argumento `--tipo` para mudar a fala padrão "Alô? Alô? Alô? Alô? [...]".  |
-| `--mp3`   |                    | Você poderá usar o argumento `--mp3` para executar um arquivo de som a partir de uma url".   |
-| `--texto` |                    | Use o argumento `--texto` com "", para definir um novo texto a ser convertido em voz.        |
-| `--voz`   |                    | Combinado com o argumento `--texto` use para trocar a voz. 0 = Masculina, 1 = Feminina       |
+| `--tipo`  | :x:                | Você poderá usar o argumento `--tipo` para mudar a fala padrão "Alô? Alô? Alô? Alô? [...]".  |
+| `--mp3`   | :x:                | Você poderá usar o argumento `--mp3` para executar um arquivo de som a partir de uma url".   |
+| `--texto` | :x:                | Use o argumento `--texto` com "", para definir um novo texto a ser convertido em voz.        |
+| `--voz`   | :x:                | Combinado com o argumento `--texto` use para trocar a voz. 0 = Masculina, 1 = Feminina       |
 
 
 #### `--tipo`
