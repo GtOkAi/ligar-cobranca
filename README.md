@@ -1,97 +1,163 @@
-# Ligar cobrança
+# 📞 Ligar Cobrança
 
-**Aplicativo disponível para:**
+<p align="center">
 
-- Android: [Google Play](https://play.google.com/store/apps/details?id=io.ligarcobranca.gtokai)
-- iOS: *versão iOS está em validação*  
+![Ligar Cobrança](https://i.imgur.com/4K5Gn5O.png)
 
-Não tenho responsabilidade sobre o uso da ferramenta e não tenho qualquer ligação com a [Total Voice](http://totalvoice.com.br).
+[![npm version](https://img.shields.io/npm/v/ligar-cobranca.svg?style=flat)](https://www.npmjs.com/package/ligar-cobranca)
+[![license](https://img.shields.io/npm/l/ligar-cobranca.svg?style=flat)](https://github.com/gtokai/ligar-cobranca/blob/main/LICENSE)
 
-## Para usar:
+Uma ferramenta CLI para fazer chamadas automáticas usando a API da Zenvia.
+Após 7 anos, fiz uma atualização profunda devido a pedidos de suporte de pessoas com pouco ou nenhum conhecimento em programação.
 
-1. Se cadastre no http://totalvoice.com.br (os créditos para ligar não são de graça, mas são baratos).
-2. Pegue seu token.
-3. Instale o pacote usando: `npm install ligar-cobranca -g`.
-4. use o comando: `ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=<TOKEN> [--tipo=<TIPO>]` (tipo opcional).
+Atualizei as dependências com falhas de segurança, o uso da API da TotalVoice que foi compradda pela ZENVIA e deixei de forma nativo o loop, além de outras melhorias.
 
-### Parâmetros
+[Instalação](#-instalação) • [Como Usar](#-como-usar) • [Exemplos](#-exemplos) • [Configuração](#-configuração)
 
-| Parâmetro | Obrigatório        | Descrição                                                                                    |
-|-----------|--------------------|----------------------------------------------------------------------------------------------|
-| `--token` | :white_check_mark: | Seu token de acesso do TotalVoice                                                            |
-| `--de`    | :white_check_mark: | Quem está se defendendo.                                                                     |
-| `--para`  | :white_check_mark: | Número da empresa de cobrança.                                                               |
-| `--tipo`  | :x:                | Você poderá usar o argumento `--tipo` para mudar a fala padrão "Alô? Alô? Alô? Alô? [...]".  |
-| `--mp3`   | :x:                | Você poderá usar o argumento `--mp3` para executar um arquivo de som a partir de uma url".   |
-| `--texto` | :x:                | Use o argumento `--texto` com "", para definir um novo texto a ser convertido em voz.        |
-| `--voz`   | :x:                | Combinado com o argumento `--texto` use para trocar a voz. 0 = Masculina, 1 = Feminina       |
+</p>
 
+## 🚀 Instalação
 
-#### `--tipo`
-
-- Default (sem usar o `--tipo`) - "Alô? Alô? Alô? Alô? Alô? [...]".
-- `0`: Aleatório  
-- `1`: "Vocês já estão bravos? Não? Então espera ai."  
-- `2`: "Alô? Alô? Alô? Oi, está me ouvindo? Então espera ai que já te ligo de novo."  
-- `3`: "Você irá receber ligações infinitamente, até que pare de ligar no meu número"  
-- `4`: "Esse é meu jeito de viver, ninguém nunca foi igual, a minha vida é fazer, o bem vencer o mal, pelo mundo viajarei tentando encontrar, o pokemon e com o seu poder tudo transformar"  
-- `5`: "Olá, tudo bem? Parece que o jogo virou, não é mesmo? Vou te ligar repetidamente, igual vocês fazem comigo"  
-  
-A idéia é criar (ou mesmo alterar os atuais) novos sons para se adaptar melhor em outras situações.  
-  
-#### `--texto` e `--voz`  
-  
-Caso nenhuma das falas padrões do argumento `--tipo` tenha te agradado, você poderá usar o argumento `--texto` para definir o que será falado, junto com o argumento `--voz`.
-
-- `0` (Default): Masculina (br-Ricardo)  
-- `1`: Feminina (br-Vitoria)
-
-Exemplo de uso:  
-  
-`ligar-cobranca --de=1199999999 --para=1199999999 --token=134df8d2a0ab3df07c42f088c9a2e5e1 --texto="Olá, essa é uma mensagem de teste usando a voz da Vitoria" --voz=1`  
-  
-#### `--mp3`  
-  
-Para executar um arquivo mp3, use o argumento `--mp3` com uma url direta para o arquivo de som.  
-Exemplo de uso:  
-  
-`ligar-cobranca --de=1199999999 --para=1199999999 --token=134df8d2a0ab3df07c42f088c9a2e5e1 --mp3=http://8balls.com.br/sejavip2/alo.mp3`  
-  
-### Dica de Uso (Windows)  
-  
-Crie um arquivo `npm.bat` (exemplo) com a linha `ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=TOKEN` e depois crie um segundo `.bat` com o código:
-
-```
-:loop
-call npm.bat
- sleep 60
- goto loop
-pause
+```bash
+npm install -g ligar-cobranca
 ```
 
-Execute o segundo .bat criado e ele irá fazer as ligações em loop.  
+## ⚙️ Configuração
 
+Você pode configurar a ferramenta de duas maneiras:
 
-### Dica de Uso (Unix likes)
+### 1. Usando o Assistente (Recomendado)
+Na primeira vez que você executar a ferramenta, ela irá guiá-lo através de um assistente interativo que ajudará você a configurar o token e o número de origem. Basta executar:
 
-Crie um arquivo `vinganca.sh` com o código:
-
-```shell
-#!/usr/bin/bash
-# heuehuuee, o melhor projeto do mundo esse <3
-
-while true
-do
-        # Acrescente aqui seus dados
-        ligar-cobranca --de=<NUMERO> --para=<NUMERO> --token=TOKEN
-        sleep 60
-done
+```bash
+ligar-cobranca
 ```
 
-Após isto dê permissão e dentro do diretório rode `chmod +x vinganca.sh && ./vinganca.sh`. <3
+E seguir as instruções na tela.
 
+### 2. Configuração Manual
+Se preferir, você pode criar manualmente um arquivo `.env` na raiz do projeto:
 
-Divirta-se.
+```env
+ZENVIA_TOKEN=seu_token_aqui
+ZENVIA_PHONE_NUMBER=seu_numero_de_origem
+```
 
-> Baseado nesse [projeto](https://github.com/haskellcamargo/gemidao-do-zap).  
+Para obter seu token, acesse [https://app.zenvia.com/](https://app.zenvia.com/)
+
+## 🎯 Como Usar
+
+### Modo Interativo
+```bash
+ligar-cobranca
+```
+
+O modo interativo é perfeito para quem não está familiarizado com comandos de linha. Ele guia você passo a passo através de um assistente amigável:
+
+1. **Token da Zenvia**: Digite seu token ou pressione Enter se já estiver configurado
+2. **Tipo de Chamada**: Escolha entre chamada única ou múltipla
+3. **Número de Destino**: Digite o número no formato internacional (ex: +5511999999999)
+4. **Número de Origem**: Opcional, digite ou pressione Enter para usar o padrão
+5. **Mensagem**: Escolha entre mensagem padrão ou digite uma personalizada
+6. **Voz**: Selecione uma das 4 vozes disponíveis
+7. **Velocidade**: Escolha entre 5 níveis de velocidade
+8. **Gravar**: Decida se deseja gravar a chamada
+9. **Quantidade**: Defina quantas chamadas deseja fazer (1-999)
+10. **Debug**: Ative o modo debug se precisar de mais informações
+
+Cada opção é apresentada de forma clara e intuitiva, com menus de seleção quando apropriado.
+
+### Modo CLI
+```bash
+ligar-cobranca --para=NUMERO_DESTINO [opções]
+```
+
+## 📋 Opções
+
+| Opção | Descrição | Padrão |
+|-------|-----------|---------|
+| `--para` | Número de destino | - |
+| `--numeros` | Números de destino (separados por vírgula) | - |
+| `--de` | Número de origem | ZENVIA_PHONE_NUMBER do .env |
+| `--texto` | Mensagem para ser convertida em voz | "Alô? Alô? Alô? Alô? Alô?" |
+| `--voz` | Voz a ser utilizada | 0 (Ricardo) |
+| `--velocidade` | Velocidade da voz (1-5) | 3 (Normal) |
+| `--gravar` | Gravar a chamada | false |
+| `--quantidade` | Quantidade de chamadas (1-999) | 1 |
+| `--debug` | Ativar modo debug | false |
+
+### Vozes Disponíveis
+- `0` - Ricardo (BR)
+- `1` - Vitória (BR)
+- `2` - Joey (EN)
+- `3` - Maxim (RUS)
+
+### Velocidades
+- `1` - Muito lento (0.5x)
+- `2` - Lento (0.75x)
+- `3` - Normal (1x)
+- `4` - Rápido (1.5x)
+- `5` - Muito rápido (2x)
+
+## 💡 Exemplos
+
+### Chamada Única
+```bash
+ligar-cobranca --para=+5511999999999 --voz=0 --velocidade=3 --gravar
+```
+
+### Múltiplas Chamadas
+```bash
+ligar-cobranca --numeros=+5511999999999,+5511888888888 --quantidade=5
+```
+
+### Chamada com Mensagem Personalizada
+```bash
+ligar-cobranca --para=+5511999999999 --texto="Olá, isso é um teste" --voz=1
+```
+
+### Chamada com Gravação
+```bash
+ligar-cobranca --para=+5511999999999 --texto="Olá" --gravar
+```
+
+### Modo Debug
+```bash
+ligar-cobranca --para=+5511999999999 --debug
+```
+
+## ⚠️ Importante
+
+- O número de origem (`--de`) deve estar no formato internacional (ex: +5511999999999)
+- Para múltiplas chamadas, forneça pelo menos 2 números
+- A quantidade de chamadas deve estar entre 1 e 999
+- O token da Zenvia deve ter 32 caracteres alfanuméricos
+- A gravação de chamadas está disponível apenas no painel de controle da Zenvia
+- Suporte completo para números internacionais (formato: +55DDDNUMERO)
+
+## 🔍 Modo Debug
+
+Use a opção `--debug` para ver logs detalhados do processo, incluindo:
+- Detalhes da requisição à API
+- Resposta do servidor
+- Informações de progresso
+- Erros detalhados (se houver)
+
+```bash
+ligar-cobranca --para=+5511999999999 --debug
+```
+
+## 📝 Licença
+
+MIT
+
+---
+
+<p align="center">
+
+**⚠️ Aviso Legal**
+
+Não sou responsável pelo uso que você faz desta ferramenta. Use com responsabilidade e de acordo com as leis locais.
+
+</p>
 

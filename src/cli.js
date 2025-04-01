@@ -1,55 +1,371 @@
 #!/usr/bin/env node
 'use strict';
 
+require('dotenv').config();
+
 var _yargs = require('yargs');
-
 var _yargs2 = _interopRequireDefault(_yargs);
-
 var _safe = require('colors/safe');
-
 var _ramda = require('ramda');
-
 var _cobranca = require('./cobranca');
-
 var _cobranca2 = _interopRequireDefault(_cobranca);
+var inquirer = require('inquirer');
+const chalk = require('chalk');
+const boxen = require('boxen');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var emitSuccess = function emitSuccess(message) {
-    return console.log((0, _safe.green)(' Ligando: ' + message));
-};
-var emitError = function emitError(message) {
-    return console.log((0, _safe.red)(' \u2717 Erro: ' + message));
+const title = boxen(
+    chalk.bold.blue('Ligar Cobrança') + '\n' +
+    chalk.gray('Uma ferramenta para fazer chamadas automáticas usando a API da Zenvia'),
+    {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'round',
+        borderColor: 'blue'
+    }
+);
+
+const emitSuccess = function emitSuccess(message) {
+    return console.log(chalk.green(' ✓ ' + message));
 };
 
-function cli(args) {
-    (0, _cobranca2.default)(args).then(function () {
-        emitSuccess(args.sms ? 'sms enviado!' : 'chamada efetuada!');
-    }).catch((0, _ramda.pipe)((0, _ramda.prop)('message'), emitError));
-}
+const emitError = function emitError(message) {
+    return console.log(chalk.red(' ✗ ' + message));
+};
 
-cli(_yargs2.default.usage('Uso: ligar-cobranca --de=<de> --para=<para>').option('token', {
-    describe: 'Token do TotalVoice',
-    type: 'string'
-}).option('de', {
-    describe: 'Que número deve ligar?',
-    type: 'string'
-}).option('para', {
-    describe: 'Qual o número da vítima?',
-    type: 'string'
-}).option('sms', {
-    describe: 'Se definido, será enviado um SMS ao invés de uma chamada',
-    type: 'boolean'
-}).option('tipo', {
-    describe: 'Default - Alô | 0 - Aleatório ou 1~6, as letras estão no https://github.com/GtOkAi/ligar-cobranca',
-    type: 'integer'
-}).option('texto', {
-    describe: 'Texto para ser convertido em voz',
-    type: 'string'
-}).option('voz', {
-    describe: 'Default - br-Ricardo | 1 - br-Vitoria',
-    type: 'integer'
-}).option('mp3', {
-    describe: 'Definir um mp3 alternativo a partir de uma URL',
-    type: 'string'
-}).demandOption(['para', 'token']).locale('pt_BR').strict().help().version().argv);
+const emitInfo = function emitInfo(message) {
+    return console.log(chalk.blue(' ℹ ' + message));
+};
+
+const voices = [
+    { name: chalk.cyan('Ricardo') + ' (Português BR - Masculino)', value: 0 },
+    { name: chalk.magenta('Vitória') + ' (Português BR - Feminino)', value: 1 },
+    { name: chalk.yellow('Joey') + ' (Inglês - Masculino)', value: 2 },
+    { name: chalk.green('Maxim') + ' (Russo - Masculino)', value: 3 }
+];
+
+const defaultTexts = [
+    { name: chalk.cyan('Alô? Alô? Alô? Alô? Alô?'), value: 'Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô? Alô?' },
+    { name: chalk.gray('Personalizado'), value: 'custom' }
+];
+
+const interactiveMode = async () => {
+    console.log(boxen(chalk.blue(`
+LIGAR-COBRANÇA
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣶⣶⣶⣶⣶⣦⣤⣶⣤⣤⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⣾⡿⠛⠋⠉⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠻⢿⣶⣦⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣾⠟⣯⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⢿⣷⣦⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣧⣤⣄⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⠀⠀⠀⠀⠀⠀⠀⠙⠻⣷⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣤⣄⠀⠀⠀⠀⠀⠀⠉⠙⠛⠻⣿⡿⣿⣶⣶⣦⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⣤⠀⠀⠀⠀⠀⠀⠈⠻⣿⣄⠀⠀⠀⠀⠀⠀⠀
+⠀⢀⣠⣿⡁⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⠃⠀⠀⠀⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣧⡀⠀⠀⠀⠀⠀
+⢰⣿⣿⣿⣗⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣄⠀⠀⠀⠀
+⠀⠉⠉⢹⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠹⣿⣄⠀⠀⠀
+⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⣸⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⡄⠀⠀
+⠀⠀⠀⠀⣿⣇⠀⠀⠀⠀⠀⢠⣾⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣿⠀⠀
+⠀⠀⠀⠀⢹⣿⡀⠀⠀⠀⣠⣿⣿⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣇⠀
+⠀⠀⠀⠀⠀⢿⣧⠀⢀⣾⣿⢃⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠀
+⠀⠀⠀⠀⠀⠘⣿⣤⣾⡿⠀⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡆
+⠀⠀⠀⠀⠀⠀⠙⠟⠋⠀⠀⢸⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣧
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿  
+
+Não sou responsável pelo uso que você faz da ferramenta! Divirta-se!
+`), {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'round',
+        borderColor: 'blue'
+    }));
+
+    const answers = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'token',
+            message: 'Digite seu token da Zenvia (ou pressione Enter se já estiver configurado no .env):',
+            validate: (input) => {
+                if (!input) return true; // Permite vazio se já estiver no .env
+                if (!/^[a-zA-Z0-9]{32}$/.test(input)) {
+                    return 'Token inválido. O token da Zenvia deve ter 32 caracteres alfanuméricos.';
+                }
+                return true;
+            }
+        },
+        {
+            type: 'list',
+            name: 'tipo',
+            message: 'Tipo de chamada:',
+            choices: [
+                { name: '1 - Chamada única', value: 1 },
+                { name: '2 - Chamadas múltiplas', value: 2 }
+            ],
+            default: 1
+        },
+        {
+            type: 'input',
+            name: 'para',
+            message: 'Número de destino:',
+            validate: input => {
+                if (!input) return 'Por favor, insira um número';
+                if (!/^\+?[0-9]{10,15}$/.test(input.replace(/\D/g, ''))) {
+                    return 'Número inválido. Use o formato: +5511999999999';
+                }
+                return true;
+            },
+            when: answers => answers.tipo === 1
+        },
+        {
+            type: 'input',
+            name: 'numeros',
+            message: 'Números de destino (separados por vírgula):',
+            validate: input => {
+                if (!input) return 'Por favor, insira pelo menos um número';
+                const numeros = input.split(',').map(n => n.trim().replace(/\D/g, ''));
+                if (numeros.length < 2) return 'Insira pelo menos 2 números';
+                for (const numero of numeros) {
+                    if (!/^[0-9]{10,15}$/.test(numero)) {
+                        return 'Número inválido. Use o formato: 5511999999999';
+                    }
+                }
+                return true;
+            },
+            filter: input => {
+                if (!input) return '';
+                // Remove espaços extras e caracteres não numéricos
+                const numeros = input.split(',').map(n => n.trim().replace(/\D/g, ''));
+                return numeros.join(',');
+            },
+            when: answers => answers.tipo === 2
+        },
+        {
+            type: 'input',
+            name: 'de',
+            message: 'Número de origem (opcional):',
+            default: process.env.ZENVIA_PHONE_NUMBER || '',
+            validate: input => {
+                if (!input) return true;
+                if (!/^\+?[0-9]{10,15}$/.test(input.replace(/\D/g, ''))) {
+                    return 'Número inválido. Use o formato: +5511999999999';
+                }
+                return true;
+            }
+        },
+        {
+            type: 'list',
+            name: 'tipoMensagem',
+            message: 'Mensagem:',
+            choices: [
+                { name: '1 - Mensagem padrão', value: 'padrao' },
+                { name: '2 - Mensagem personalizada', value: 'custom' }
+            ],
+            default: 0
+        },
+        {
+            type: 'input',
+            name: 'texto',
+            message: 'Digite sua mensagem:',
+            when: answers => answers.tipoMensagem === 'custom'
+        },
+        {
+            type: 'list',
+            name: 'voz',
+            message: 'Voz:',
+            choices: [
+                { name: '1 - Ricardo (BR)', value: 0 },
+                { name: '2 - Vitória (BR)', value: 1 },
+                { name: '3 - Joey (EN)', value: 2 },
+                { name: '4 - Maxim (RUS)', value: 3 }
+            ],
+            default: 0
+        },
+        {
+            type: 'list',
+            name: 'velocidade',
+            message: 'Velocidade da voz:',
+            choices: [
+                { name: '1 - Muito lento', value: 1 },
+                { name: '2 - Lento', value: 2 },
+                { name: '3 - Normal', value: 3 },
+                { name: '4 - Rápido', value: 4 },
+                { name: '5 - Muito rápido', value: 5 }
+            ],
+            default: 3
+        },
+        {
+            type: 'confirm',
+            name: 'gravar',
+            message: 'Gravar chamada?',
+            default: false
+        },
+        {
+            type: 'input',
+            name: 'quantidade',
+            message: 'Quantidade de chamadas:',
+            default: '1',
+            validate: input => {
+                const num = parseInt(input);
+                if (isNaN(num) || num < 1 || num > 999) {
+                    return 'Por favor, insira um número entre 1 e 999';
+                }
+                return true;
+            }
+        },
+        {
+            type: 'confirm',
+            name: 'debug',
+            message: 'Ativar modo debug?',
+            default: false
+        }
+    ]);
+
+    return {
+        token: answers.token || undefined,
+        para: answers.para,
+        numeros: answers.tipo === 2 ? (answers.numeros || '').split(',').map(n => n.trim().replace(/\D/g, '')) : null,
+        de: answers.de,
+        texto: answers.tipoMensagem === 'custom' ? answers.texto : 'Alô? Alô? Alô? Alô? Alô?',
+        voz: parseInt(answers.voz),
+        velocidade: parseInt(answers.velocidade),
+        gravar: answers.gravar,
+        quantidade: parseInt(answers.quantidade),
+        debug: answers.debug
+    };
+};
+
+const cli = async () => {
+    try {
+        const argv = _yargs2.default
+            .usage('Uso: $0 [opções]')
+            .option('para', {
+                alias: 'p',
+                description: 'Número de destino',
+                type: 'string'
+            })
+            .option('numeros', {
+                alias: 'n',
+                description: 'Números de destino (separados por vírgula)',
+                type: 'array'
+            })
+            .option('de', {
+                alias: 'd',
+                description: 'Número de origem',
+                type: 'string'
+            })
+            .option('texto', {
+                alias: 't',
+                description: 'Mensagem para ser convertida em voz',
+                type: 'string'
+            })
+            .option('voz', {
+                alias: 'v',
+                description: 'Voz a ser utilizada (0-3)',
+                type: 'number'
+            })
+            .option('velocidade', {
+                alias: 's',
+                description: 'Velocidade da voz (1-5)',
+                type: 'number'
+            })
+            .option('gravar', {
+                alias: 'g',
+                description: 'Gravar a chamada',
+                type: 'boolean'
+            })
+            .option('quantidade', {
+                alias: 'q',
+                description: 'Quantidade de chamadas (1-999)',
+                type: 'number'
+            })
+            .option('debug', {
+                description: 'Ativar modo debug',
+                type: 'boolean'
+            })
+            .help('h')
+            .alias('h', 'help')
+            .argv;
+
+        let args;
+        if (argv.para || argv.numeros) {
+            args = argv;
+        } else {
+            args = await interactiveMode();
+        }
+
+        // Função para executar as chamadas
+        const executarChamadas = async () => {
+            const totalChamadas = args.quantidade * (args.numeros ? args.numeros.length : 1);
+            let currentCall = 0;
+
+            // Atualiza o progresso a cada chamada
+            const updateProgress = (current) => {
+                currentCall = current;
+                process.stdout.write(`\r\x1b[K`); // Limpa a linha atual
+                process.stdout.write(`Efetuando ligações (${current}/${totalChamadas})...`);
+            };
+
+            // Adiciona o callback de progresso aos argumentos
+            args.onProgress = updateProgress;
+
+            const results = await _cobranca2.default(args);
+            
+            // Limpa a linha do progresso
+            process.stdout.write(`\r\x1b[K`); // Limpa a linha atual
+
+            // Exibe o resumo das chamadas
+            const sucessos = results.filter(r => r.success).length;
+            const sucessosFormatados = sucessos.toString().padStart(2, '0');
+            console.log(boxen(chalk.green(`
+Chamadas Concluídas!
+✓ Sucessos: ${sucessosFormatados}
+`), {
+                padding: 1,
+                margin: 1,
+                borderStyle: 'round',
+                borderColor: 'green'
+            }));
+
+            return results;
+        };
+
+        // Executa as chamadas iniciais
+        await executarChamadas();
+
+        // Loop principal
+        while (true) {
+            const { acao } = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'acao',
+                    message: 'O que você deseja fazer?',
+                    choices: [
+                        { name: '1 - Executar novamente com as mesmas configurações', value: 'repetir' },
+                        { name: '2 - Reiniciar com novas configurações', value: 'reiniciar' },
+                        { name: '3 - Sair', value: 'sair' }
+                    ],
+                    default: 0
+                }
+            ]);
+
+            if (acao === 'sair') {
+                console.log('\n👋 Até logo!');
+                break;
+            } else if (acao === 'reiniciar') {
+                console.log('\n🔄 Reiniciando...\n');
+                await cli();
+                break;
+            } else if (acao === 'repetir') {
+                console.log('\n🔄 Executando novamente...\n');
+                await executarChamadas();
+            }
+        }
+
+    } catch (error) {
+        console.error(chalk.red('❌ Erro:'), error.message);
+        process.exit(1);
+    }
+};
+
+cli();

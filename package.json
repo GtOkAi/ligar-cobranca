@@ -52,19 +52,22 @@
     "url": "http://facebook.com/talvez.seja.o.gustavo"
   },
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "colors": "^1.1.2",
-    "ramda": "0.24.1",
-    "superagent": "^3.5.2",
-    "superagent-promise": "^1.1.0",
-    "yargs": "8.0.2"
+    "axios": "^1.6.7",
+    "boxen": "^4.2.0",
+    "chalk": "^4.1.2",
+    "colors": "^1.4.0",
+    "dotenv": "^16.4.5",
+    "inquirer": "^8.2.6",
+    "ora": "^5.4.1",
+    "ramda": "^0.29.1",
+    "yargs": "^17.7.2"
   },
-  "description": "Faça ligações para qualquer número com um som automatico falando 'alô' sem parar",
+  "description": "Uma ferramenta para fazer chamadas automáticas usando a API da Zenvia",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "6.25.0",
-    "babel-preset-es2015": "6.24.1",
-    "xo": "0.18.2"
+    "@babel/cli": "^7.24.0",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "nodemon": "^3.1.0"
   },
   "directories": {},
   "dist": {
@@ -72,23 +75,22 @@
     "tarball": "https://registry.npmjs.org/ligar-cobranca/-/ligar-cobranca-0.1.2.tgz"
   },
   "homepage": "https://github.com/GtOkAi/ligar-cobranca",
-  "license": "MIT",
-  "main": "dist/index.js",
+  "license": "ISC",
+  "main": "dist/cli.js",
   "maintainers": [
     "Gustavo Porto <fgustavoporto@gmail.com>"
   ],
   "name": "ligar-cobranca",
-  "optionalDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/GtOkAi/ligar-cobranca.git"
   },
   "scripts": {
-    "build": "babel ./src -d ./dist",
-    "lint": "xo src/**",
-    "prepublish": "npm run build"
+    "build": "babel src -d dist",
+    "start": "node dist/cli.js",
+    "dev": "nodemon --watch src --exec 'npm run build && npm start'"
   },
-  "version": "0.2.0",
+  "version": "1.0.0",
   "xo": {
     "esnext": true,
     "space": 4,
@@ -97,13 +99,7 @@
         "off"
       ],
       "no-restricted-syntax": [
-        "error",
-        "ForStatement",
-        "WhileStatement",
-        "SwitchStatement",
-        "VariableDeclaration[kind='var']",
-        "VariableDeclaration[kind='let']",
-        "TryStatement"
+        "error"
       ],
       "object-curly-spacing": [
         "error",
@@ -116,9 +112,10 @@
     }
   },
   "keywords": [
-    "ligar",
-    "totalvoice",
+    "zenvia",
     "cobranca",
-    "voip"
+    "chamadas",
+    "voice",
+    "api"
   ]
 }
