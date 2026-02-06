@@ -23,7 +23,7 @@ function _interopRequireDefault(obj) {
     "default": obj
   };
 }
-var title = boxen(chalk.bold.blue('Ligar Cobrança') + '\n' + chalk.gray('Uma ferramenta para fazer chamadas automáticas usando a API da Zenvia'), {
+var title = boxen(chalk.bold.blue('Ligar Cobrança') + '\n' + chalk.gray('Uma ferramenta para fazer chamadas automáticas usando APIs de voz (Zenvia, Twilio)'), {
   padding: 1,
   margin: 1,
   borderStyle: 'round',
@@ -72,9 +72,24 @@ var interactiveMode = /*#__PURE__*/function () {
           }));
           _context.next = 3;
           return inquirer.prompt([{
+            type: 'list',
+            name: 'provider',
+            message: 'Selecione o provedor de API:',
+            choices: [{
+              name: 'Zenvia',
+              value: 'zenvia'
+            }, {
+              name: 'Twilio',
+              value: 'twilio'
+            }],
+            "default": 'zenvia'
+          }, {
             type: 'input',
             name: 'token',
             message: 'Digite seu token da Zenvia (ou pressione Enter se já estiver configurado no .env):',
+            when: function when(answers) {
+              return answers.provider === 'zenvia';
+            },
             validate: function validate(input) {
               if (!input) return true; // Permite vazio se já estiver no .env
               if (!/^[a-zA-Z0-9]{32}$/.test(input)) {
@@ -149,7 +164,12 @@ var interactiveMode = /*#__PURE__*/function () {
             type: 'input',
             name: 'de',
             message: 'Número de origem (opcional):',
-            "default": process.env.ZENVIA_PHONE_NUMBER || '',
+            "default": function _default(answers) {
+              if (answers.provider === 'twilio') {
+                return process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM || '';
+              }
+              return process.env.ZENVIA_PHONE_NUMBER || '';
+            },
             validate: function validate(input) {
               if (!input) return true;
               if (!/^\+?[0-9]{10,15}$/.test(input.replace(/\D/g, ''))) {
@@ -241,6 +261,7 @@ var interactiveMode = /*#__PURE__*/function () {
         case 3:
           answers = _context.sent;
           return _context.abrupt("return", {
+            provider: answers.provider,
             token: answers.token || undefined,
             para: answers.para,
             numeros: answers.tipo === 2 ? (answers.numeros || '').split(',').map(function (n) {
@@ -264,14 +285,19 @@ var interactiveMode = /*#__PURE__*/function () {
     return _ref.apply(this, arguments);
   };
 }();
-var _cli = /*#__PURE__*/function () {
+var cli = /*#__PURE__*/function () {
   var _ref2 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee3() {
     var argv, args, executarChamadas, _yield$inquirer$promp, acao;
     return _regeneratorRuntime().wrap(function _callee3$(_context3) {
       while (1) switch (_context3.prev = _context3.next) {
         case 0:
           _context3.prev = 0;
-          argv = _yargs2["default"].usage('Uso: $0 [opções]').option('para', {
+          argv = _yargs2["default"].usage('Uso: $0 [opções]').option('provider', {
+            alias: 'P',
+            description: 'Provedor de API (zenvia ou twilio)',
+            type: 'string',
+            choices: ['zenvia', 'twilio']
+          }).option('para', {
             alias: 'p',
             description: 'Número de destino',
             type: 'string'
@@ -290,22 +316,27 @@ var _cli = /*#__PURE__*/function () {
           }).option('voz', {
             alias: 'v',
             description: 'Voz a ser utilizada (0-3)',
-            type: 'number'
+            type: 'number',
+            "default": 0
           }).option('velocidade', {
             alias: 's',
             description: 'Velocidade da voz (1-5)',
-            type: 'number'
+            type: 'number',
+            "default": 3
           }).option('gravar', {
             alias: 'g',
             description: 'Gravar a chamada',
-            type: 'boolean'
+            type: 'boolean',
+            "default": false
           }).option('quantidade', {
             alias: 'q',
             description: 'Quantidade de chamadas (1-999)',
-            type: 'number'
+            type: 'number',
+            "default": 1
           }).option('debug', {
             description: 'Ativar modo debug',
-            type: 'boolean'
+            type: 'boolean',
+            "default": false
           }).help('h').alias('h', 'help').argv;
           if (!(argv.para || argv.numeros)) {
             _context3.next = 6;
@@ -323,7 +354,7 @@ var _cli = /*#__PURE__*/function () {
           // Função para executar as chamadas
           executarChamadas = /*#__PURE__*/function () {
             var _ref3 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-              var totalChamadas, currentCall, updateProgress, results, sucessos, sucessosFormatados;
+              var totalChamadas, currentCall, updateProgress, results, sucessos, falhas, sucessosFormatados, falhasFormatadas;
               return _regeneratorRuntime().wrap(function _callee2$(_context2) {
                 while (1) switch (_context2.prev = _context2.next) {
                   case 0:
@@ -346,15 +377,28 @@ var _cli = /*#__PURE__*/function () {
                     sucessos = results.filter(function (r) {
                       return r.success;
                     }).length;
+                    falhas = results.filter(function (r) {
+                      return !r.success;
+                    });
                     sucessosFormatados = sucessos.toString().padStart(2, '0');
-                    console.log(boxen(chalk.green("\nChamadas Conclu\xEDdas!\n\u2713 Sucessos: ".concat(sucessosFormatados, "\n")), {
+                    falhasFormatadas = falhas.length.toString().padStart(2, '0');
+                    console.log(boxen(chalk.green("\u2713 Chamadas iniciadas: ".concat(sucessosFormatados)) + '\n' + chalk.red("\u2717 Falhas no envio:    ".concat(falhasFormatadas)) + '\n\n' + chalk.gray('Nota: O telefone pode levar alguns segundos para tocar.'), {
                       padding: 1,
                       margin: 1,
                       borderStyle: 'round',
-                      borderColor: 'green'
+                      borderColor: falhas.length > 0 ? 'red' : 'green',
+                      title: 'Relatório de Envio',
+                      titleAlignment: 'center'
                     }));
+                    if (falhas.length > 0) {
+                      console.log(chalk.red('\nDetalhes das falhas:'));
+                      falhas.forEach(function (f) {
+                        console.log(chalk.red("\u2022 ".concat(f.number || 'Desconhecido', ": ").concat(f.error)));
+                      });
+                      console.log(''); // Linha em branco
+                    }
                     return _context2.abrupt("return", results);
-                  case 12:
+                  case 15:
                   case "end":
                     return _context2.stop();
                 }
@@ -368,7 +412,7 @@ var _cli = /*#__PURE__*/function () {
           return executarChamadas();
         case 12:
           if (!true) {
-            _context3.next = 35;
+            _context3.next = 37;
             break;
           }
           _context3.next = 15;
@@ -396,44 +440,50 @@ var _cli = /*#__PURE__*/function () {
             break;
           }
           console.log('\n👋 Até logo!');
-          return _context3.abrupt("break", 35);
+          return _context3.abrupt("break", 37);
         case 22:
           if (!(acao === 'reiniciar')) {
-            _context3.next = 29;
+            _context3.next = 31;
             break;
           }
-          console.log('\n🔄 Reiniciando...\n');
+          console.log('\n🔄 Reiniciando com novas configurações...\n');
+          // Força o modo interativo para coletar novas configurações
           _context3.next = 26;
-          return _cli();
+          return interactiveMode();
         case 26:
-          return _context3.abrupt("break", 35);
+          args = _context3.sent;
+          _context3.next = 29;
+          return executarChamadas();
         case 29:
+          _context3.next = 35;
+          break;
+        case 31:
           if (!(acao === 'repetir')) {
-            _context3.next = 33;
+            _context3.next = 35;
             break;
           }
           console.log('\n🔄 Executando novamente...\n');
-          _context3.next = 33;
+          _context3.next = 35;
           return executarChamadas();
-        case 33:
+        case 35:
           _context3.next = 12;
           break;
-        case 35:
-          _context3.next = 41;
-          break;
         case 37:
-          _context3.prev = 37;
+          _context3.next = 43;
+          break;
+        case 39:
+          _context3.prev = 39;
           _context3.t0 = _context3["catch"](0);
           console.error(chalk.red('❌ Erro:'), _context3.t0.message);
           process.exit(1);
-        case 41:
+        case 43:
         case "end":
           return _context3.stop();
       }
-    }, _callee3, null, [[0, 37]]);
+    }, _callee3, null, [[0, 39]]);
   }));
   return function cli() {
     return _ref2.apply(this, arguments);
   };
 }();
-_cli();
+cli();
