@@ -5,8 +5,16 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
+const ZenviaProvider = require('./providers/ZenviaProvider');
+const TwilioProvider = require('./providers/TwilioProvider');
+
 const ZENVIA_TOKEN = process.env.ZENVIA_TOKEN;
 const ZENVIA_PHONE_NUMBER = process.env.ZENVIA_PHONE_NUMBER;
+
+// Twilio Config
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM;
 
 // Função para log condicional baseado no modo debug
 const debugLog = (message, debug = false) => {
@@ -48,181 +56,155 @@ const salvarToken = (token) => {
 
 // Função para formatar número brasileiro
 const formatarNumero = (numero) => {
+    if (!numero) return numero;
+    const original = numero.toString().trim();
+    
     // Remove todos os caracteres não numéricos
-    numero = numero.replace(/\D/g, '');
+    let limpo = original.replace(/\D/g, '');
     
     // Se o número começa com 0, remove o 0
-    if (numero.startsWith('0')) {
-        numero = numero.substring(1);
+    if (limpo.startsWith('0')) {
+        limpo = limpo.substring(1);
     }
     
-    // Se o número não começa com 55 e tem 10 ou 11 dígitos (DDD + número), adiciona 55
-    if (!numero.startsWith('55') && (numero.length === 10 || numero.length === 11)) {
-        numero = '55' + numero;
+    // Se o input original não tinha + e tem 10 ou 11 dígitos, assumimos que é BR e adicionamos 55
+    // Se já tinha +, respeitamos o código do país fornecido
+    if (!original.startsWith('+') && (limpo.length === 10 || limpo.length === 11)) {
+        limpo = '55' + limpo;
     }
     
     // Adiciona o + no início
-    return '+' + numero;
+    return '+' + limpo;
 };
 
-const call = async (token, para, texto, voz, velocidade, de, gravar, debug = false) => {
-    const voiceMap = {
-        0: 'br-Ricardo',
-        1: 'br-Vitoria',
-        2: 'en-Joey',
-        3: 'rus-Maxim'
-    };
-
-    const speedMap = {
-        1: 0.5,  // Muito lento
-        2: 0.75, // Lento
-        3: 1,    // Normal
-        4: 1.5,  // Rápido
-        5: 2     // Muito rápido
-    };
-
-    try {
-        debugLog('\n🔍 Iniciando chamada:', debug);
-        debugLog('   - Para: ' + para, debug);
-        debugLog('   - De: ' + de, debug);
-        debugLog('   - Voz: ' + voiceMap[voz], debug);
-        debugLog('   - Velocidade: ' + speedMap[velocidade], debug);
-        debugLog('   - Gravar: ' + (gravar ? 'Sim' : 'Não'), debug);
-        debugLog('   - Mensagem: ' + texto, debug);
-
-        const response = await axios.post('https://voice-api.zenvia.com/tts', {
-            numero_destino: para,
-            mensagem: texto,
-            resposta_usuario: false,
-            tipo_voz: voiceMap[voz],
-            bina: de,
-            gravar_audio: gravar,
-            detecta_caixa: false,
-            bina_inteligente: true,
-            velocidade: speedMap[velocidade] || 1
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Access-Token': token
-            }
-        });
-
-        debugLog('✅ Chamada iniciada com sucesso!', debug);
-        debugLog('   - ID: ' + response.data.dados?.id, debug);
-        debugLog('   - Status: ' + response.data.status, debug);
-        debugLog('   - Mensagem: ' + response.data.mensagem, debug);
-
-        return {
-            success: true,
-            messageId: response.data.dados?.id,
-            status: response.data.status,
-            message: response.data.mensagem,
-            number: para
-        };
-    } catch (error) {
-        debugLog('❌ Erro na chamada:', debug);
-        debugLog('   - Número: ' + para, debug);
-        debugLog('   - Status: ' + error.response?.status, debug);
-        debugLog('   - Mensagem: ' + (error.response?.data?.mensagem || error.message), debug);
-        if (error.response?.data) {
-            debugLog('   - Detalhes: ' + JSON.stringify(error.response.data, null, 2), debug);
+const getProvider = (args) => {
+    // Se o usuário explicitou o provider
+    if (args.provider === 'twilio') {
+        if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+            throw new Error('Credenciais da Twilio não encontradas (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN).');
         }
-
-        return {
-            success: false,
-            error: error.response?.data?.mensagem || error.message,
-            number: para,
-            status: error.response?.status,
-            details: error.response?.data
-        };
+        return new TwilioProvider(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
     }
+    
+    if (args.provider === 'zenvia') {
+        const token = args.token || ZENVIA_TOKEN;
+        if (!token) throw new Error('Token Zenvia não encontrado.');
+        return new ZenviaProvider(token);
+    }
+
+    // Detecção automática
+    if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && !ZENVIA_TOKEN && !args.token) {
+        return new TwilioProvider(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+    }
+
+    // Default para Zenvia (para manter compatibilidade e wizard)
+    const token = args.token || ZENVIA_TOKEN;
+    if (!token && !TWILIO_ACCOUNT_SID) {
+         // Se não tem nada configurado, provavelmente está rodando pela primeira vez ou wizard.
+         // Vamos assumir Zenvia pois o wizard pede token Zenvia.
+         return null; // Retorna null para indicar que falta configuração
+    }
+    
+    // Se tiver token Zenvia ou foi passado via args
+    return new ZenviaProvider(token || ZENVIA_TOKEN);
 };
 
 async function makeMultipleCalls(args) {
     const results = [];
-    const totalCalls = args.quantidade;
     let currentCall = 0;
+    
+    // Determina a lista de números alvo
+    const alvos = args.numeros && args.numeros.length > 0 ? args.numeros : [args.para];
+    
+    // Remove duplicatas e valores vazios
+    const alvosUnicos = [...new Set(alvos)].filter(n => n);
 
-    // Faz as chamadas em sequência para o mesmo número
-    for (let i = 0; i < args.quantidade; i++) {
-        try {
-            const result = await call(
-                args.token || ZENVIA_TOKEN,
-                args.para,
-                args.texto,
-                args.voz,
-                args.velocidade,
-                args.de,
-                args.gravar,
-                args.debug
-            );
-            results.push(result);
-            currentCall++;
-            if (args.onProgress) {
-                args.onProgress(currentCall);
+    if (alvosUnicos.length === 0) {
+        throw new Error('Nenhum número de destino especificado.');
+    }
+
+    // Inicializa o provider
+    let provider;
+    try {
+        provider = getProvider(args);
+    } catch (e) {
+        // Se o usuário especificou um provedor e falhou, não devemos fazer fallback
+        if (args.provider) {
+            throw e;
+        }
+
+        // Se falhar ao pegar provider na detecção automática, vamos assumir Zenvia
+        if (args.token || ZENVIA_TOKEN) {
+             provider = new ZenviaProvider(args.token || ZENVIA_TOKEN);
+        } else {
+             throw e;
+        }
+    }
+
+    if (!provider) {
+        // Fallback final
+        if (args.token) {
+            provider = new ZenviaProvider(args.token);
+        } else {
+             throw new Error('Nenhum provedor configurado. Configure ZENVIA_TOKEN ou TWILIO credentials.');
+        }
+    }
+
+    // Para cada número alvo
+    for (const numero of alvosUnicos) {
+        const numeroDestino = formatarNumero(numero);
+        
+        // Faz as chamadas repetidas para o número atual
+        for (let i = 0; i < args.quantidade; i++) {
+            try {
+                // Prepara argumentos para o provider
+                // Prioriza número de origem do argumento, depois do env var específico do provider
+                let fromNumber = args.de;
+                if (!fromNumber) {
+                    if (provider instanceof TwilioProvider) {
+                        fromNumber = TWILIO_PHONE_NUMBER;
+                    } else {
+                        fromNumber = ZENVIA_PHONE_NUMBER;
+                    }
+                }
+                
+                const numeroOrigem = formatarNumero(fromNumber);
+
+                const result = await provider.call({
+                    to: numeroDestino,
+                    from: numeroOrigem,
+                    text: args.texto,
+                    voice: args.voz,
+                    speed: args.velocidade,
+                    record: args.gravar,
+                    debugLog: (msg, debug) => debugLog(msg, args.debug)
+                });
+                
+                results.push(result);
+                currentCall++;
+                if (args.onProgress) {
+                    args.onProgress(currentCall);
+                }
+            } catch (error) {
+                results.push({
+                    success: false,
+                    number: numeroDestino,
+                    error: error.message
+                });
+                currentCall++;
+                if (args.onProgress) {
+                    args.onProgress(currentCall);
+                }
             }
-        } catch (error) {
-            results.push({
-                success: false,
-                number: args.para,
-                error: error.message
-            });
-            currentCall++;
-            if (args.onProgress) {
-                args.onProgress(currentCall);
+            // Pequeno delay entre chamadas para evitar rate limit
+            if (i < args.quantidade - 1 || alvosUnicos.indexOf(numero) < alvosUnicos.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
             }
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     return results;
 }
-
-const makeCall = async (args) => {
-    try {
-        // Usa o token fornecido ou o do .env
-        const token = args.token || process.env.ZENVIA_TOKEN;
-        
-        if (!token) {
-            throw new Error('Token não encontrado. Configure ZENVIA_TOKEN no arquivo .env ou forneça um token via linha de comando');
-        }
-
-        const response = await axios.post(
-            'https://voice-api.zenvia.com/tts',
-            {
-                numero_destino: args.para,
-                mensagem: args.texto,
-                resposta_usuario: false,
-                tipo_voz: args.voz === 0 ? 'br-Ricardo' : 
-                          args.voz === 1 ? 'br-Vitoria' : 
-                          args.voz === 2 ? 'en-Joey' : 'rus-Maxim',
-                bina: args.de,
-                gravar_audio: args.gravar,
-                bina_inteligente: true,
-                velocidade: args.velocidade === 1 ? 0.5 :
-                           args.velocidade === 2 ? 0.75 :
-                           args.velocidade === 3 ? 1 :
-                           args.velocidade === 4 ? 1.5 : 2
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'Access-Token': token
-                }
-            }
-        );
-
-        return {
-            success: true,
-            number: args.para,
-            response: response.data
-        };
-    } catch (error) {
-        throw new Error(error.response?.data?.mensagem || error.message);
-    }
-};
 
 const cobranca = async (args) => {
     try {
@@ -230,12 +212,12 @@ const cobranca = async (args) => {
             console.log('Debug: Argumentos recebidos:', args);
         }
 
-        // Se um token foi fornecido, salva no .env
-        if (args.token) {
-            if (!/^[a-zA-Z0-9]{32}$/.test(args.token)) {
-                throw new Error('Token inválido. O token da Zenvia deve ter 32 caracteres alfanuméricos.');
+        // Se um token Zenvia foi fornecido via CLI, salva no .env (mantendo comportamento original)
+        // Nota: Isso é específico da Zenvia. Twilio não tem wizard de CLI ainda.
+        if (args.token && !args.provider) { // Assume Zenvia se passar token sem especificar provider
+            if (/^[a-zA-Z0-9]{32}$/.test(args.token)) {
+                salvarToken(args.token);
             }
-            salvarToken(args.token);
         }
 
         return await makeMultipleCalls(args);

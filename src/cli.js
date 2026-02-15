@@ -17,7 +17,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const title = boxen(
     chalk.bold.blue('Ligar Cobrança') + '\n' +
-    chalk.gray('Uma ferramenta para fazer chamadas automáticas usando a API da Zenvia'),
+    chalk.gray('Uma ferramenta para fazer chamadas automáticas usando APIs de voz (Zenvia, Twilio)'),
     {
         padding: 1,
         margin: 1,
@@ -83,9 +83,20 @@ Não sou responsável pelo uso que você faz da ferramenta! Divirta-se!
 
     const answers = await inquirer.prompt([
         {
+            type: 'list',
+            name: 'provider',
+            message: 'Selecione o provedor de API:',
+            choices: [
+                { name: 'Zenvia', value: 'zenvia' },
+                { name: 'Twilio', value: 'twilio' }
+            ],
+            default: 'zenvia'
+        },
+        {
             type: 'input',
             name: 'token',
             message: 'Digite seu token da Zenvia (ou pressione Enter se já estiver configurado no .env):',
+            when: answers => answers.provider === 'zenvia',
             validate: (input) => {
                 if (!input) return true; // Permite vazio se já estiver no .env
                 if (!/^[a-zA-Z0-9]{32}$/.test(input)) {
@@ -144,7 +155,12 @@ Não sou responsável pelo uso que você faz da ferramenta! Divirta-se!
             type: 'input',
             name: 'de',
             message: 'Número de origem (opcional):',
-            default: process.env.ZENVIA_PHONE_NUMBER || '',
+            default: (answers) => {
+                if (answers.provider === 'twilio') {
+                    return process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM || '';
+                }
+                return process.env.ZENVIA_PHONE_NUMBER || '';
+            },
             validate: input => {
                 if (!input) return true;
                 if (!/^\+?[0-9]{10,15}$/.test(input.replace(/\D/g, ''))) {
@@ -222,6 +238,7 @@ Não sou responsável pelo uso que você faz da ferramenta! Divirta-se!
     ]);
 
     return {
+        provider: answers.provider,
         token: answers.token || undefined,
         para: answers.para,
         numeros: answers.tipo === 2 ? (answers.numeros || '').split(',').map(n => n.trim().replace(/\D/g, '')) : null,
@@ -239,6 +256,12 @@ const cli = async () => {
     try {
         const argv = _yargs2.default
             .usage('Uso: $0 [opções]')
+            .option('provider', {
+                alias: 'P',
+                description: 'Provedor de API (zenvia ou twilio)',
+                type: 'string',
+                choices: ['zenvia', 'twilio']
+            })
             .option('para', {
                 alias: 'p',
                 description: 'Número de destino',
@@ -262,26 +285,31 @@ const cli = async () => {
             .option('voz', {
                 alias: 'v',
                 description: 'Voz a ser utilizada (0-3)',
-                type: 'number'
+                type: 'number',
+                default: 0
             })
             .option('velocidade', {
                 alias: 's',
                 description: 'Velocidade da voz (1-5)',
-                type: 'number'
+                type: 'number',
+                default: 3
             })
             .option('gravar', {
                 alias: 'g',
                 description: 'Gravar a chamada',
-                type: 'boolean'
+                type: 'boolean',
+                default: false
             })
             .option('quantidade', {
                 alias: 'q',
                 description: 'Quantidade de chamadas (1-999)',
-                type: 'number'
+                type: 'number',
+                default: 1
             })
             .option('debug', {
                 description: 'Ativar modo debug',
-                type: 'boolean'
+                type: 'boolean',
+                default: false
             })
             .help('h')
             .alias('h', 'help')
@@ -316,16 +344,32 @@ const cli = async () => {
 
             // Exibe o resumo das chamadas
             const sucessos = results.filter(r => r.success).length;
+            const falhas = results.filter(r => !r.success);
+            
             const sucessosFormatados = sucessos.toString().padStart(2, '0');
-            console.log(boxen(chalk.green(`
-Chamadas Concluídas!
-✓ Sucessos: ${sucessosFormatados}
-`), {
-                padding: 1,
-                margin: 1,
-                borderStyle: 'round',
-                borderColor: 'green'
-            }));
+            const falhasFormatadas = falhas.length.toString().padStart(2, '0');
+
+            console.log(boxen(
+                chalk.green(`✓ Chamadas iniciadas: ${sucessosFormatados}`) + '\n' +
+                chalk.red(`✗ Falhas no envio:    ${falhasFormatadas}`) + '\n\n' +
+                chalk.gray('Nota: O telefone pode levar alguns segundos para tocar.'),
+                {
+                    padding: 1,
+                    margin: 1,
+                    borderStyle: 'round',
+                    borderColor: falhas.length > 0 ? 'red' : 'green',
+                    title: 'Relatório de Envio',
+                    titleAlignment: 'center'
+                }
+            ));
+
+            if (falhas.length > 0) {
+                console.log(chalk.red('\nDetalhes das falhas:'));
+                falhas.forEach(f => {
+                    console.log(chalk.red(`• ${f.number || 'Desconhecido'}: ${f.error}`));
+                });
+                console.log(''); // Linha em branco
+            }
 
             return results;
         };
@@ -353,9 +397,11 @@ Chamadas Concluídas!
                 console.log('\n👋 Até logo!');
                 break;
             } else if (acao === 'reiniciar') {
-                console.log('\n🔄 Reiniciando...\n');
-                await cli();
-                break;
+                console.log('\n🔄 Reiniciando com novas configurações...\n');
+                // Força o modo interativo para coletar novas configurações
+                args = await interactiveMode();
+                await executarChamadas();
+                // Não fazemos break aqui para manter o loop rodando com as novas configurações
             } else if (acao === 'repetir') {
                 console.log('\n🔄 Executando novamente...\n');
                 await executarChamadas();
